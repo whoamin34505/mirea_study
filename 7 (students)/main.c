@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
-#include <direct.h> // Для _mkdir на Windows
+#include <direct.h>
 
 struct Student {
     char fio[50];
@@ -15,6 +15,7 @@ void registration();
 void view_form();
 void list();
 void find();
+void edit();
 void ex();
 
 int main() {
@@ -29,6 +30,7 @@ int main() {
         printf("2 - displaying a specific form\n");
         printf("3 - displaying the general list of students\n");
         printf("4 - student search by various data\n");
+        printf("5 - edit a specific form\n");
         printf("0 - exit\n");
         printf("Enter your choice: ");
         
@@ -52,6 +54,9 @@ int main() {
             case 4:
                 find();
                 break;
+            case 5:
+                edit();
+                break;
             case 0:
                 ex();
                 break;
@@ -70,65 +75,62 @@ void registration() {
 
     // Чтение FIO
     printf("Enter your FIO: ");
-    scanf(" %[^\n]s", reg.fio); // Чтение строки с пробелами
+    scanf(" %[^\n]s", reg.fio);
 
     // Чтение возраста с проверкой
-    do {
+    while (1) {
         printf("Enter your age: ");
-        if (scanf("%d", &reg.age) != 1 || reg.age <= 0) {
+        if (scanf("%d", &reg.age) != 1 || reg.age < 1) {
             printf("Invalid age! Please enter a positive integer.\n");
-            fflush(stdin); // Очищаем буфер ввода
+            while (getchar() != '\n'); // Очистка буфера ввода
         } else {
-            break; // Если возраст корректный, выходим из цикла
+            break;
         }
-    } while (1);
+    }
 
     // Чтение курса с проверкой
-    do {
+    while (1) {
         printf("Enter your course: ");
-        if (scanf("%d", &reg.course) != 1 || reg.course <= 0) {
+        if (scanf("%d", &reg.course) != 1 || reg.course < 1) {
             printf("Invalid course! Please enter a positive integer.\n");
-            fflush(stdin); // Очищаем буфер ввода
+            while (getchar() != '\n'); // Очистка буфера ввода
         } else {
-            break; // Если курс корректный, выходим из цикла
+            break;
         }
-    } while (1);
+    }
 
-    // Создание директории, если её нет
+    // Создание директории
     _mkdir("7");
 
-    // Поиск свободного ID
     char file[50];
     FILE *fp = NULL;
+
+    // Определение уникального ID для студента
     for (int i = 0; i < 1000; i++) {
-        sprintf(file, "7/student_%d.txt", i);
-        fp = fopen(file, "r");
+        sprintf(file, "7/student_%d", i);
+        fp = fopen(file, "rb");
         if (fp == NULL) { 
-            reg.ID = i;
+            reg.ID = i; // Присваиваем ID, если файл не найден
             break;
         }
         fclose(fp);
     }
 
-    // Открытие файла в режиме записи
-    fp = fopen(file, "w");
+    // Создание файла для записи данных
+    fp = fopen(file, "wb");
     if (fp == NULL) {
-        printf("Error creating file!\n");
+        printf("Error creating file! Please check file permissions.\n");
         system("pause");
         return;
     }
 
-    // Добавляем BOM для UTF-8
-    unsigned char bom[] = {0xEF, 0xBB, 0xBF};
-    fwrite(bom, sizeof(bom), 1, fp);
-
-    // Записываем данные в файл
-    fprintf(fp, "%s\n%d\n%d\n%d\n", reg.fio, reg.age, reg.course, reg.ID);
+    fwrite(&reg, sizeof(reg), 1, fp); // Запись данных структуры в файл
     fclose(fp);
 
     printf("Student data saved successfully! ID: %d\n", reg.ID);
     system("pause");
 }
+
 
 
 
@@ -144,26 +146,23 @@ void view_form() {
     }
 
     char path[50];
-    sprintf(path, "7/student_%d.txt", n);
-    FILE* fp = fopen(path, "r");
+    sprintf(path, "7/student_%d", n);
+    FILE* fp = fopen(path, "rb");
     if (fp == NULL) {
         printf("Could not find a student.\n");
         system("pause");
         return;
     }
 
-    struct Student reg;
-    fscanf(fp, " %[^\n]s", reg.fio);
-    fscanf(fp, "%d", &reg.age);
-    fscanf(fp, "%d", &reg.course);
-    fscanf(fp, "%d", &reg.ID);
+    struct Student form;
+    fread(&form, sizeof(form), 1, fp);
     fclose(fp);
 
     printf("Student details:\n");
-    printf("FIO: %s\n", reg.fio);
-    printf("Age: %d\n", reg.age);
-    printf("Course: %d\n", reg.course);
-    printf("ID: %d\n", reg.ID);
+    printf("FIO: %s\n", form.fio);
+    printf("Age: %d\n", form.age);
+    printf("Course: %d\n", form.course);
+    printf("ID: %d\n", form.ID);
     system("pause");
 }
 
@@ -173,13 +172,10 @@ void list() {
     char file[50];
     FILE *fp = NULL;
     for (int i = 0; i < 1000; i++) {
-        sprintf(file, "7/student_%d.txt", i);
-        fp = fopen(file, "r");
+        sprintf(file, "7/student_%d", i);
+        fp = fopen(file, "rb");
         if (fp != NULL) { 
-            fscanf(fp, " %[^\n]s", view.fio);
-            fscanf(fp, "%d", &view.age);
-            fscanf(fp, "%d", &view.course);
-            fscanf(fp, "%d", &view.ID);
+            fread(&view, sizeof(view), 1, fp);
             printf("Student ID:%d\t", view.ID);
             printf("FIO: %s\t", view.fio);
             printf("Age: %d\t", view.age);
@@ -195,6 +191,119 @@ void find() {
     printf("Search functionality is not implemented yet.\n");
     system("pause");
 }
+
+void edit() {
+    system("cls");
+    printf("Enter student's ID: ");
+    int n;
+    if (scanf("%d", &n) != 1 || n < 0) {
+        printf("Invalid ID!\n");
+        while (getchar() != '\n'); // Очистка буфера
+        system("pause");
+        return;
+    }
+
+    char path[50];
+    sprintf(path, "7/student_%d", n);
+
+    FILE* fp = fopen(path, "rb");
+    if (fp == NULL) {
+        printf("Could not find a student with ID %d.\n", n);
+        system("pause");
+        return;
+    }
+
+    struct Student form;
+    fread(&form, sizeof(form), 1, fp);
+    fclose(fp);
+
+    printf("Student details:\n");
+    printf("Student ID: %d\n", form.ID);
+    printf("FIO: %s\n", form.fio);
+    printf("Age: %d\n", form.age);
+    printf("Course: %d\n", form.course);
+
+    printf("Choose the data to edit:\n");
+    printf("1 - Delete student\n");
+    printf("2 - Edit FIO\n");
+    printf("3 - Edit age\n");
+    printf("4 - Edit course\n");
+    printf("0 - Exit\n");
+    printf("Enter your choice: ");
+
+    int choice;
+    if (scanf("%d", &choice) != 1) {
+        printf("Invalid input! Please enter a number.\n");
+        while (getchar() != '\n'); // Очистка буфера
+        system("pause");
+        return;
+    }
+
+    switch (choice) {
+        case 1: { // Удаление студента
+            printf("Are you sure you want to delete this student? Type 'yes' to confirm: ");
+            char confirm[4];
+            scanf("%3s", confirm);
+            if (strcmp(confirm, "yes") == 0) {
+                printf("Attempting to delete file: %s\n", path); // Выводим путь к файлу перед удалением
+                if (remove(path) == 0) {
+                    printf("Student deleted successfully.\n");
+                } else {
+                    perror("Error deleting student file"); // Выводим подробное сообщение об ошибке
+                }
+            } else {
+                printf("Deletion cancelled.\n");
+            }
+            break;
+}
+
+
+        case 2: { // Изменение FIO
+            printf("Enter new FIO: ");
+            scanf(" %[^\n]s", form.fio);
+            break;
+        }
+        case 3: { // Изменение возраста
+            while (1) {
+                printf("Enter new age: ");
+                if (scanf("%d", &form.age) == 1 && form.age > 0) break;
+                printf("Invalid age! Please enter a positive integer.\n");
+                while (getchar() != '\n'); // Очистка буфера
+            }
+            break;
+        }
+        case 4: { // Изменение курса
+            while (1) {
+                printf("Enter new course: ");
+                if (scanf("%d", &form.course) == 1 && form.course > 0) break;
+                printf("Invalid course! Please enter a positive integer.\n");
+                while (getchar() != '\n'); // Очистка буфера
+            }
+            break;
+        }
+        case 0: // Выход из функции
+            printf("Exiting edit mode.\n");
+            return;
+        default:
+            printf("Invalid choice! Try again.\n");
+            system("pause");
+            return;
+    }
+
+    // Сохранение изменений в файл
+    fp = fopen(path, "wb");
+    if (fp == NULL) {
+        printf("Error opening file for writing.\n");
+        system("pause");
+        return;
+    }
+    fwrite(&form, sizeof(form), 1, fp);
+    fclose(fp);
+
+    printf("Changes saved successfully.\n");
+    system("pause");
+}
+
 
 void ex() {
     printf("Exiting program. Goodbye!\n");
