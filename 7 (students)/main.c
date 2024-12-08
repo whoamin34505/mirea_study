@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
+#include <Windows.h>
 
 struct Student {
     char fio[50];
@@ -17,6 +16,8 @@ void find();
 void ex();
 
 int main() {
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);    
     while (1) {
         system("cls");
         printf("Welcome to students database!\n");
@@ -71,9 +72,10 @@ void registration() {
     char file[50];
     FILE *fp = NULL;
     for (int i = 0; i < 1000; i++) {
-        sprintf(file, "7/student_%d.txt", i);
+        sprintf(file, "7/student_%d", i);
         fp = fopen(file, "r");
         if (fp == NULL) { 
+            reg.ID = i;
             break;
         }
         fclose(fp);
@@ -86,7 +88,7 @@ void registration() {
             system("pause");
             return;
         }
-        fprintf(fp, "FIO: %s\nAge: %d\nCourse: %d\n", reg.fio, reg.age, reg.course);
+        fprintf(fp, "%s\n%d\n%d\n%d\n", reg.fio, reg.age, reg.course, reg.ID);
         fclose(fp);
         printf("Student data saved successfully!\n");
     } else {
@@ -97,7 +99,17 @@ void registration() {
 
 void view_form() {
     system("cls");
-    printf("View specific form functionality is not implemented yet.\n");
+    printf("Enter student's ID to view: ");
+    int n;
+    scanf("%d",&n);
+    char path[50];
+    sprintf(path,"7/student_%s",n);
+    FILE* fp = fopen(path, "r");
+    if (fp == NULL) {
+        printf("Counld not find a student."); 
+    }
+    
+    fclose(fp);
     system("pause");
 }
 
