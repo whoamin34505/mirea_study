@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <Windows.h>
+#include <string.h>
+#include <windows.h>
+#include <direct.h> // Для _mkdir на Windows
 
 struct Student {
     char fio[50];
@@ -17,7 +19,8 @@ void ex();
 
 int main() {
     SetConsoleCP(CP_UTF8);
-    SetConsoleOutputCP(CP_UTF8);    
+    SetConsoleOutputCP(CP_UTF8);
+    
     while (1) {
         system("cls");
         printf("Welcome to students database!\n");
@@ -28,8 +31,14 @@ int main() {
         printf("4 - student search by various data\n");
         printf("0 - exit\n");
         printf("Enter your choice: ");
+        
         int choose;
-        scanf("%d", &choose);
+        if (scanf("%d", &choose) != 1) {
+            printf("Invalid input! Please enter a number.\n");
+            system("pause");
+            continue;
+        }
+
         switch (choose) {
             case 1:
                 registration();
@@ -47,7 +56,7 @@ int main() {
                 ex();
                 break;
             default:
-                printf("You are invalid! Try again.\n");
+                printf("Invalid choice! Try again.\n");
                 system("pause");
                 break;
         }
@@ -59,20 +68,40 @@ void registration() {
     system("cls");
     struct Student reg;
 
+    // Чтение FIO
     printf("Enter your FIO: ");
-    scanf("%s",&reg.fio);
+    scanf(" %[^\n]s", reg.fio); // Чтение строки с пробелами
 
-    printf("Enter your age: ");
-    scanf("%d", &reg.age);
+    // Чтение возраста с проверкой
+    do {
+        printf("Enter your age: ");
+        if (scanf("%d", &reg.age) != 1 || reg.age <= 0) {
+            printf("Invalid age! Please enter a positive integer.\n");
+            fflush(stdin); // Очищаем буфер ввода
+        } else {
+            break; // Если возраст корректный, выходим из цикла
+        }
+    } while (1);
 
-    printf("Enter your course: ");
-    scanf("%d", &reg.course);
+    // Чтение курса с проверкой
+    do {
+        printf("Enter your course: ");
+        if (scanf("%d", &reg.course) != 1 || reg.course <= 0) {
+            printf("Invalid course! Please enter a positive integer.\n");
+            fflush(stdin); // Очищаем буфер ввода
+        } else {
+            break; // Если курс корректный, выходим из цикла
+        }
+    } while (1);
 
+    // Создание директории, если её нет
+    _mkdir("7");
 
+    // Поиск свободного ID
     char file[50];
     FILE *fp = NULL;
     for (int i = 0; i < 1000; i++) {
-        sprintf(file, "7/student_%d", i);
+        sprintf(file, "7/student_%d.txt", i);
         fp = fopen(file, "r");
         if (fp == NULL) { 
             reg.ID = i;
@@ -81,41 +110,83 @@ void registration() {
         fclose(fp);
     }
 
+    // Открытие файла в режиме записи
+    fp = fopen(file, "w");
     if (fp == NULL) {
-        fp = fopen(file, "w");
-        if (fp == NULL) {
-            printf("Error creating file!\n");
-            system("pause");
-            return;
-        }
-        fprintf(fp, "%s\n%d\n%d\n%d\n", reg.fio, reg.age, reg.course, reg.ID);
-        fclose(fp);
-        printf("Student data saved successfully!\n");
-    } else {
-        printf("Error: Could not find an available file slot.\n");
+        printf("Error creating file!\n");
+        system("pause");
+        return;
     }
+
+    // Добавляем BOM для UTF-8
+    unsigned char bom[] = {0xEF, 0xBB, 0xBF};
+    fwrite(bom, sizeof(bom), 1, fp);
+
+    // Записываем данные в файл
+    fprintf(fp, "%s\n%d\n%d\n%d\n", reg.fio, reg.age, reg.course, reg.ID);
+    fclose(fp);
+
+    printf("Student data saved successfully! ID: %d\n", reg.ID);
     system("pause");
 }
+
+
+
 
 void view_form() {
     system("cls");
     printf("Enter student's ID to view: ");
     int n;
-    scanf("%d",&n);
+    if (scanf("%d", &n) != 1 || n < 0) {
+        printf("Invalid ID!\n");
+        system("pause");
+        return;
+    }
+
     char path[50];
-    sprintf(path,"7/student_%s",n);
+    sprintf(path, "7/student_%d.txt", n);
     FILE* fp = fopen(path, "r");
     if (fp == NULL) {
-        printf("Counld not find a student."); 
+        printf("Could not find a student.\n");
+        system("pause");
+        return;
     }
-    
+
+    struct Student reg;
+    fscanf(fp, " %[^\n]s", reg.fio);
+    fscanf(fp, "%d", &reg.age);
+    fscanf(fp, "%d", &reg.course);
+    fscanf(fp, "%d", &reg.ID);
     fclose(fp);
+
+    printf("Student details:\n");
+    printf("FIO: %s\n", reg.fio);
+    printf("Age: %d\n", reg.age);
+    printf("Course: %d\n", reg.course);
+    printf("ID: %d\n", reg.ID);
     system("pause");
 }
 
 void list() {
     system("cls");
-    printf("List of students functionality is not implemented yet.\n");
+    struct Student view;
+    char file[50];
+    FILE *fp = NULL;
+    for (int i = 0; i < 1000; i++) {
+        sprintf(file, "7/student_%d.txt", i);
+        fp = fopen(file, "r");
+        if (fp != NULL) { 
+            fscanf(fp, " %[^\n]s", view.fio);
+            fscanf(fp, "%d", &view.age);
+            fscanf(fp, "%d", &view.course);
+            fscanf(fp, "%d", &view.ID);
+            printf("Student ID:%d\t", view.ID);
+            printf("FIO: %s\t", view.fio);
+            printf("Age: %d\t", view.age);
+            printf("Course: %d\n", view.course);
+        }
+        fclose(fp);
+    }
     system("pause");
 }
 
@@ -126,5 +197,6 @@ void find() {
 }
 
 void ex() {
+    printf("Exiting program. Goodbye!\n");
     exit(0);
 }
