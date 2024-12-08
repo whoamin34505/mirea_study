@@ -182,9 +182,43 @@ void list() {
 
 void find() {
     system("cls");
-    printf("Search functionality is not implemented yet.\n");
+    printf("Enter search query: ");
+    char query[50];
+    scanf(" %[^\n]s", query); // Чтение строки для поиска
+
+    struct Student student;
+    char file[50];
+    FILE *fp = NULL;
+    int found = 0;
+
+    for (int i = 0; i < 1000; i++) {
+        sprintf(file, "7/student_%d", i);
+        fp = fopen(file, "rb");
+
+        if (fp != NULL) {
+            fread(&student, sizeof(student), 1, fp);
+            fclose(fp);
+
+            if (strstr(student.fio, query) != NULL || student.age == atoi(query) || student.course == atoi(query) || student.ID == atoi(query)) { 
+                printf("Student found:\n");
+                printf("ID: %d\n", student.ID);
+                printf("FIO: %s\n", student.fio);
+                printf("Age: %d\n", student.age);
+                printf("Course: %d\n", student.course);
+                printf("\n");
+                found = 1;
+            }
+        }
+    }
+
+    if (!found) {
+        printf("No students found matching the query.\n");
+    }
+
     system("pause");
 }
+
+
 
 void edit() {
     system("cls");
