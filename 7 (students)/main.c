@@ -3,6 +3,7 @@
 #include <string.h>
 #include <windows.h>
 #include <direct.h>
+#include <ctype.h>
 
 struct Student {
     char fio[50];
@@ -17,6 +18,7 @@ void list();
 void find();
 void edit();
 void ex();
+int is_number(const char *str);
 
 int main() {
     SetConsoleCP(CP_UTF8);
@@ -184,7 +186,7 @@ void find() {
     system("cls");
     printf("Enter search query: ");
     char query[50];
-    scanf(" %[^\n]s", query); // Чтение строки для поиска
+    scanf(" %[^\n]s", query);
 
     struct Student student;
     char file[50];
@@ -199,7 +201,7 @@ void find() {
             fread(&student, sizeof(student), 1, fp);
             fclose(fp);
 
-            if (strstr(student.fio, query) != NULL || student.age == atoi(query) || student.course == atoi(query) || student.ID == atoi(query)) { 
+            if (strstr(student.fio, query) != NULL) {
                 printf("Student found:\n");
                 printf("ID: %d\n", student.ID);
                 printf("FIO: %s\n", student.fio);
@@ -207,6 +209,19 @@ void find() {
                 printf("Course: %d\n", student.course);
                 printf("\n");
                 found = 1;
+            }
+
+            if (is_number(query)) {
+                int query_num = atoi(query);
+                if (student.age == query_num || student.course == query_num || student.ID == query_num) {
+                    printf("Student found:\n");
+                    printf("ID: %d\n", student.ID);
+                    printf("FIO: %s\n", student.fio);
+                    printf("Age: %d\n", student.age);
+                    printf("Course: %d\n", student.course);
+                    printf("\n");
+                    found = 1;
+                }
             }
         }
     }
@@ -336,4 +351,13 @@ void edit() {
 void ex() {
     printf("Exiting program. Goodbye!\n");
     exit(0);
+}
+
+int is_number(const char *str) {
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (!isdigit(str[i])) {
+            return 0; 
+        }
+    }
+    return 1; 
 }
