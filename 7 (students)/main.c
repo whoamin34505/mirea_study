@@ -73,50 +73,44 @@ void registration() {
     system("cls");
     struct Student reg;
 
-    // Чтение FIO
     printf("Enter your FIO: ");
     scanf(" %[^\n]s", reg.fio);
 
-    // Чтение возраста с проверкой
     while (1) {
         printf("Enter your age: ");
         if (scanf("%d", &reg.age) != 1 || reg.age < 1) {
             printf("Invalid age! Please enter a positive integer.\n");
-            while (getchar() != '\n'); // Очистка буфера ввода
+            while (getchar() != '\n');
         } else {
             break;
         }
     }
 
-    // Чтение курса с проверкой
     while (1) {
         printf("Enter your course: ");
         if (scanf("%d", &reg.course) != 1 || reg.course < 1) {
             printf("Invalid course! Please enter a positive integer.\n");
-            while (getchar() != '\n'); // Очистка буфера ввода
+            while (getchar() != '\n'); 
         } else {
             break;
         }
     }
 
-    // Создание директории
     _mkdir("7");
 
     char file[50];
     FILE *fp = NULL;
 
-    // Определение уникального ID для студента
     for (int i = 0; i < 1000; i++) {
         sprintf(file, "7/student_%d", i);
         fp = fopen(file, "rb");
         if (fp == NULL) { 
-            reg.ID = i; // Присваиваем ID, если файл не найден
+            reg.ID = i; 
             break;
         }
         fclose(fp);
     }
 
-    // Создание файла для записи данных
     fp = fopen(file, "wb");
     if (fp == NULL) {
         printf("Error creating file! Please check file permissions.\n");
@@ -124,7 +118,7 @@ void registration() {
         return;
     }
 
-    fwrite(&reg, sizeof(reg), 1, fp); // Запись данных структуры в файл
+    fwrite(&reg, sizeof(reg), 1, fp); 
     fclose(fp);
 
     printf("Student data saved successfully! ID: %d\n", reg.ID);
@@ -198,7 +192,7 @@ void edit() {
     int n;
     if (scanf("%d", &n) != 1 || n < 0) {
         printf("Invalid ID!\n");
-        while (getchar() != '\n'); // Очистка буфера
+        while (getchar() != '\n'); 
         system("pause");
         return;
     }
@@ -234,54 +228,54 @@ void edit() {
     int choice;
     if (scanf("%d", &choice) != 1) {
         printf("Invalid input! Please enter a number.\n");
-        while (getchar() != '\n'); // Очистка буфера
+        while (getchar() != '\n'); 
         system("pause");
         return;
     }
 
     switch (choice) {
-        case 1: { // Удаление студента
+        case 1: { 
             printf("Are you sure you want to delete this student? Type 'yes' to confirm: ");
             char confirm[4];
             scanf("%3s", confirm);
             if (strcmp(confirm, "yes") == 0) {
-                printf("Attempting to delete file: %s\n", path); // Выводим путь к файлу перед удалением
                 if (remove(path) == 0) {
                     printf("Student deleted successfully.\n");
                 } else {
-                    perror("Error deleting student file"); // Выводим подробное сообщение об ошибке
+                    perror("Error deleting student file"); 
                 }
             } else {
                 printf("Deletion cancelled.\n");
             }
-            break;
+            system("pause");
+            return;
 }
 
 
-        case 2: { // Изменение FIO
+        case 2: { 
             printf("Enter new FIO: ");
             scanf(" %[^\n]s", form.fio);
             break;
         }
-        case 3: { // Изменение возраста
+        case 3: { 
             while (1) {
                 printf("Enter new age: ");
                 if (scanf("%d", &form.age) == 1 && form.age > 0) break;
                 printf("Invalid age! Please enter a positive integer.\n");
-                while (getchar() != '\n'); // Очистка буфера
+                while (getchar() != '\n'); 
             }
             break;
         }
-        case 4: { // Изменение курса
+        case 4: { 
             while (1) {
                 printf("Enter new course: ");
                 if (scanf("%d", &form.course) == 1 && form.course > 0) break;
                 printf("Invalid course! Please enter a positive integer.\n");
-                while (getchar() != '\n'); // Очистка буфера
+                while (getchar() != '\n'); 
             }
             break;
         }
-        case 0: // Выход из функции
+        case 0: 
             printf("Exiting edit mode.\n");
             return;
         default:
@@ -290,7 +284,7 @@ void edit() {
             return;
     }
 
-    // Сохранение изменений в файл
+
     fp = fopen(path, "wb");
     if (fp == NULL) {
         printf("Error opening file for writing.\n");
